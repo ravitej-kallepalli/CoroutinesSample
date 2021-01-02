@@ -3,7 +3,10 @@ package com.ravitej.coroutinessample
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.ravitej.coroutinessample.model.User
+import androidx.lifecycle.viewModelScope
+import com.ravitej.coroutinessample.model.InProgress
+import com.ravitej.coroutinessample.model.UserState
+import kotlinx.coroutines.launch
 
 /**
  * Simple ViewModel to store the list of users.
@@ -12,28 +15,13 @@ import com.ravitej.coroutinessample.model.User
  */
 class UserViewModel : ViewModel() {
 
-    private var currentCount = 10
-    private val usersList: MutableList<User> = mutableListOf()
-    private val _usersLiveData: MutableLiveData<List<User>> = MutableLiveData()
+    private val _usersLiveData: MutableLiveData<UserState> = MutableLiveData()
+    val usersLiveData: LiveData<UserState> = _usersLiveData
 
-    val usersLiveData: LiveData<List<User>> = _usersLiveData
-
-    init {
-        (0 until currentCount).forEach {
-            usersList.add(User("Dwight $it", "Schrute"))
+    fun start() {
+        viewModelScope.launch {
+            _usersLiveData.value = InProgress
+            _usersLiveData.value = UserRepository.getUsers()
         }
-
-        _usersLiveData.value = usersList
-    }
-
-
-    fun addUser() {
-        usersList.add(User("Dwight ${currentCount++}", "Schrute"))
-        _usersLiveData.value = usersList
-    }
-
-    fun removeUser() {
-        usersList.removeAt(0)
-        _usersLiveData.value = usersList
     }
 }

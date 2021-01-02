@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">CoroutinesSample</string>
+    <string name="loading_users">Loading users....</string>
 </resources>
