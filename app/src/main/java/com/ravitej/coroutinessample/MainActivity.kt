@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ravitej.coroutinessample.adapter.UserAdapter
@@ -13,6 +14,7 @@ import com.ravitej.coroutinessample.databinding.ActivityMainBinding
 import com.ravitej.coroutinessample.model.Error
 import com.ravitej.coroutinessample.model.InProgress
 import com.ravitej.coroutinessample.model.Success
+import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,25 +40,34 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
-        viewModel.start()
-        viewModel.usersLiveData.observe(this, Observer {
+        viewModel.usersLiveDataFromFlow.observe(this, Observer {
             when (it) {
                 is InProgress -> {
-                    binding.loadingVisibility.visibility = View.VISIBLE
-                    binding.usersRecyclerView.visibility = View.GONE
+                    toggleProgressBarVisibility(true)
                 }
                 is Success -> {
-                    binding.loadingVisibility.visibility = View.GONE
-                    binding.usersRecyclerView.visibility = View.VISIBLE
+                    toggleProgressBarVisibility(false)
                     adapter.submitList(it.list)
-                    //FIXME: Why the UI is not updating without the notifyDataSetChanged??
+                    //FIXME: Why this is needed?
                     adapter.notifyDataSetChanged()
                 }
                 is Error -> {
-
                 }
             }
         })
+
+        lifecycleScope.launchWhenResumed {
+            var count = 1
+            while (count < 1000) {
+                delay(100)
+                binding.helloWorld.text = "Hello World ${++count}"
+            }
+        }
+    }
+
+    private fun toggleProgressBarVisibility(value: Boolean) {
+        binding.loadingVisibility.visibility = if (value) View.VISIBLE else View.GONE
+        binding.usersRecyclerView.visibility = if (value) View.GONE else View.VISIBLE
     }
 
     private fun recyclerViewInit() {

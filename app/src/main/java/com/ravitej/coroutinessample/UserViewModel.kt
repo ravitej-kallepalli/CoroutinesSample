@@ -1,11 +1,8 @@
 package com.ravitej.coroutinessample
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.ravitej.coroutinessample.model.InProgress
+import androidx.lifecycle.*
 import com.ravitej.coroutinessample.model.UserState
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -16,12 +13,24 @@ import kotlinx.coroutines.launch
 class UserViewModel : ViewModel() {
 
     private val _usersLiveData: MutableLiveData<UserState> = MutableLiveData()
-    val usersLiveData: LiveData<UserState> = _usersLiveData
+    val usersLiveDataWithCoroutines: LiveData<UserState> = _usersLiveData
+
+    //Flow converted as LiveData
+    val usersLiveDataFromFlow: LiveData<UserState> = UserRepository
+        .getUsersUsingFlow()
+        .asLiveData(viewModelScope.coroutineContext)
 
     fun start() {
         viewModelScope.launch {
-            _usersLiveData.value = InProgress
             _usersLiveData.value = UserRepository.getUsers()
+        }
+    }
+
+    fun startWithFlow() {
+        viewModelScope.launch {
+            UserRepository.getUsersUsingFlow().apply {
+                collect { value -> _usersLiveData.value = value }
+            }
         }
     }
 }
